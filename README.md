@@ -252,7 +252,7 @@ E dentro do `database/index.js`, acresento mais um `map`, para poder executar (a
 Pronto, agora sim, na hora de salvar o usuário a associação irá ocorrer e o ID que for informado no files estará no users.
 
 
-## Aula 19 - Listagem de Prestadores de Serviços
+## Aula 20 - Listagem de Prestadores de Serviços
 
 Vamos Listar todos os prestadores de servicos da aplicacao.
 
@@ -374,7 +374,7 @@ this.app.use(
 
 Fazendo isso, no insomnia ao clicar no link da imagem ela ira abrir no navegador.
 
-## Aula 20 - Migration e model de agendamento
+## Aula 21 - Migration e model de agendamento
 
 Toda vez que um usuario marcar um servico com algum dos prestadores, sera gerada um novo registro na tabela de agendamentos.
 
@@ -487,6 +487,72 @@ Depois disso vamos em ` database > index.js` e cadastramos o `appointment` como 
 import Appointment from '../app/models/Appointment';
 ...
 const models = [User, File, Appointment];
+...
+```
+
+## Aula 22 - Agendamento de Servicos
+
+Vamos criar a rota para um usuario pode agendar um servico com um prestador de servico
+
+Criamos um `controller` chamado `AppointmentController.js`.
+
+Dentro de `AppointmentController.js`: 
+
+```
+import * as Yup from 'yup';
+import User from '../models/User';
+import Appointment from '../models/Appointment';
+
+class AppointmentController {
+  async store(req, res) {
+    const schema = Yup.object().shape({
+      provider_id: Yup.number().required(),
+      date: Yup.date().required(),
+    });
+
+    if (!(await schema.isValid(req.body))) {
+      return res.status(400).json({ error: 'Validation fails' });
+    }
+
+    const { provider_id, date } = req.body;
+
+    // check id provider_id is a provider
+
+    const isProvider = await User.findOne({
+      where: { id: provider_id, provider: true },
+    });
+
+    if (!isProvider) {
+      return res
+        .status(401)
+        .json({ error: 'You can only create appointments with providers' });
+    }
+
+    const appointment = await Appointment.create({
+      user_id: req.userId,
+      provider_id,
+      date,
+    });
+
+    return res.json(appointment);
+  }
+}
+
+export default new AppointmentController();
+
+```
+Aqui fazemos a validacao dos dados com o Yup, verificamos se os dados estao preenchidos e corretos,
+verificamos se a `id` que o usuario esta passando ao tentar fazer um agendamento é de um provider,e se nao for nos mandamos um erro `You can only create appointments with providers`. Se passar por tudo nos criamos o agendamento com o usuario que fez o agendamento, o provider que vai atender ele e a data do servico.
+
+
+
+Depois em `routes.js`: 
+
+```
+...
+import AppointmentController from './app/controllers/AppointmentController';
+...
+routes.post('/appointments', AppointmentController.store);
 ...
 ```
 
