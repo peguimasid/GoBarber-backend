@@ -374,7 +374,120 @@ this.app.use(
 
 Fazendo isso, no insomnia ao clicar no link da imagem ela ira abrir no navegador.
 
+## Aula 20 - Migration e model de agendamento
 
+Toda vez que um usuario marcar um servico com algum dos prestadores, sera gerada um novo registro na tabela de agendamentos.
 
+Criamos a tabela rodando o comando: 
+
+```
+yarn sequelize migration:create --name=create-appointments
+```
+
+A configuracao da `create-appointments`: 
+```
+module.exports = {
+  up: (queryInterface, Sequelize) => {
+    return queryInterface.createTable('appointments', {
+      id: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        autoIncrement: true,
+        primaryKey: true,
+      },
+      date: {
+        allowNull: false,
+        type: Sequelize.DATE,
+      },
+      user_id: {
+        type: Sequelize.INTEGER,
+        references: { model: 'users', key: 'id' },
+        onUpdate: 'CASCADE',
+        onDelete: 'SET NULL',
+        allowNull: true,
+      },
+      provider_id: {
+        type: Sequelize.INTEGER,
+        references: { model: 'users', key: 'id' },
+        onUpdate: 'CASCADE',
+        onDelete: 'SET NULL',
+        allowNull: true,
+      },
+      canceled_at: {
+        type: Sequelize.DATE,
+      },
+      created_at: {
+        type: Sequelize.DATE,
+        allowNull: false,
+      },
+      updated_at: {
+        type: Sequelize.DATE,
+        allowNull: false,
+      },
+    });
+  },
+
+  down: queryInterface => {
+    return queryInterface.dropTable('appointments');
+  },
+};
+
+```
+
+Fizemos ali no `user_id` a referencia do agendamento(appointments) pro usuario(user) que esta fazendo esse agendamento e a referencia desse agendamento para o provedor que vai fornecer esse
+trabalho`provider_id` usando as references para relacionar duas tabelas.
+
+Depois de configurado rodamos no terminal o comando:
+
+```
+yarn sequelize db:migrate
+```
+
+Agora criamos um `model` pra nossa tabela chamada `Appointment.js`
+
+Dentro do model:
+
+```
+import Sequelize, { Model } from 'sequelize';
+
+class Appointment extends Model {
+  static init(sequelize) {
+    super.init(
+      {
+        date: Sequelize.DATE,
+        canceled_at: Sequelize.DATE,
+      },
+      {
+        sequelize,
+      }
+    );
+
+    return this;
+  }
+
+  static associate(models) {
+    this.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' });
+    this.belongsTo(models.User, { foreignKey: 'provider_id', as: 'provider' });
+  }
+}
+
+export default Appointment;
+
+```
+
+Nao precisamos referenciar o `user_id` e `provider_id` dentro do `super.init` pois como sao dados de tabelas associadas e nao referentes a tabela `appointments` nos temos que passar eles(user_id, provider_id), dentro do relacionamento `static` e somos obrigados(quando temos dois relacionamentos na mesam tabela) a passar um apelido para eles para o nosso banco de dados nao se confudir: 
+``` 
+as: 'user'      EX DE APELIDO
+```
+
+Depois disso vamos em ` database > index.js` e cadastramos o `appointment` como novo model: 
+
+```
+...
+import Appointment from '../app/models/Appointment';
+...
+const models = [User, File, Appointment];
+...
+```
 
 
