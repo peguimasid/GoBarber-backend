@@ -63,8 +63,6 @@ Depois adicionar um atributo `file` e adicionar o arquivo nesse atributo.
 
 Essa lib multer permite envio de multiplos arquivos.
 
-Fim: [https://github.com/tgmarinho/gobarber/tree/aula18](https://github.com/tgmarinho/gobarber/tree/aula18)
-
 ## Aula 19 - Avatar do Usuário
 
 ### Salvando informações do arquivo na base de dados
