@@ -250,3 +250,129 @@ E dentro do `database/index.js`, acresento mais um `map`, para poder executar (a
 ```
 
 Pronto, agora sim, na hora de salvar o usuário a associação irá ocorrer e o ID que for informado no files estará no users.
+
+
+## Aula 19 - Listagem de Prestadores de Serviços
+
+Vamos Listar todos os prestadores de servicos da aplicacao.
+
+Como estamos falando de uma nova entidade vamos criar um novo controller `ProviderController.js`:
+
+Dentro de `ProviderController`: 
+
+```
+import User from '../models/User';
+import File from '../models/File';
+
+class ProviderController {
+  async index(req, res) {
+    const providers = await User.findAll({
+      where: { provider: true },
+      attributes: ['id', 'name', 'email', 'avatar_id'],
+      include: [
+        {
+          model: File,
+          as: 'avatar',
+          attributes: ['name', 'path', 'url'],
+        },
+      ],
+    });
+    return res.json(providers);
+  }
+}
+
+export default new ProviderController();
+```
+
+Em `routes.js`:
+
+```
+...
+import ProviderController from './app/controllers/ProviderController';
+...
+routes.get('/providers', ProviderController.index);
+...
+```
+
+Agora nosso Backend nos retorna as informacoes de todos os `providers`, mas ainda nao retorna a imagem em si, para isso vamos fazer mais algumas configurações:
+
+Em `User.js`:
+
+Nosso codigo que estava assim:
+```
+...
+static associate(models) {
+    this.belongsTo(models.File, { foreignKey: 'avatar_id' });
+  }
+...
+```
+
+Vai ficar assim:
+```
+...
+static associate(models) {
+    this.belongsTo(models.File, { foreignKey: 'avatar_id', as: 'avatar' });
+  }
+...  
+```
+
+Dessa forma referenciamos o `avatar_id` como sendo agora `avatar`
+
+
+Agora pra referenciar a imagem e conseguir fazer com que o Frontend a veja e mostre fazemos assim:
+
+Vamos no model `File.js` e nosso arquivo vai ficar assim:
+
+```
+import Sequelize, { Model } from 'sequelize';
+
+class File extends Model {
+  static init(sequelize) {
+    super.init(
+      {
+        name: Sequelize.STRING,
+        path: Sequelize.STRING,
+        url: {
+          type: Sequelize.VIRTUAL,
+          get() {
+            return `http://localhost:3000/files/${this.path}`;
+          },
+        },
+      },
+      {
+        sequelize,
+      }
+    );
+
+    return this;
+  }
+}
+
+export default File;
+```
+
+O que fizemos foi adicionar no `super.init` esse novo campo `url`, que vai ser VIRTUAL, ou seja nao aparece, mas esta la, e passando como metodo `get()` retornamos nossa url da aplicacao onde sera exibida a imagem. O `this.path` refere-se ao nome da imagem como foi guardado no backend.
+
+Agora pra exibir a imagem que foi guardada no banco de dados, vamos em `app.js` na raiz da aplicacao e adicionamos o seguinte:
+
+```
+...
+import path from 'path';
+...
+```
+
+E dentro de `middlewares()`: 
+
+```
+...
+this.app.use(
+      '/files',
+      express.static(path.resolve(__dirname, '..', 'tmp', 'uploads'))
+    );
+...
+```
+
+
+
+
+
