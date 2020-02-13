@@ -372,6 +372,8 @@ this.app.use(
 ...
 ```
 
+Fazendo isso, no insomnia ao clicar no link da imagem ela ira abrir no navegador.
+
 
 
 
