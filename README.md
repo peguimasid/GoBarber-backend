@@ -560,7 +560,7 @@ routes.post('/appointments', AppointmentController.store);
 
 Vamos fazer uma validacao para verificar se a data que o usuario colocou no agendamento é uma data que esta para acontecer e nao uma data passada. A segunda validacao é pra verificar se a data de agendamento ja nao esta reservada(somente um agendamento por hora).
 
-Vamos baixar uma biblioteca para lidar co datas dentro da nossa aplicacao:
+Vamos baixar uma biblioteca para lidar com datas dentro da nossa aplicacao:
 
 `yarn add date-fns@next`
 
