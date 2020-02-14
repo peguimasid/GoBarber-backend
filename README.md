@@ -616,6 +616,90 @@ const appointment = await Appointment.create({
 
 Isso garante que nao sejam criados agendamentos em horarios quebrados.
 
+## Aula 24 - Listando agendamento de usuários
+
+Vamos listar todos os agendamentos que foram marcados
+
+Dentro de `routes.js`:
+
+`routes.get('/appointments', AppointmentController.index);`
+
+Dentro de `AppointmentController.js`:
+
+```
+...
+import File from '../models/File';
+...
+async index(req, res) {
+    const appointments = await Appointment.findAll({
+      where: { user_id: req.userId, canceled_at: null },
+      order: ['date'],
+      attributes: ['id', 'date'],
+      include: [
+        {
+          model: User,
+          as: 'provider',
+          attributes: ['id', 'name'],
+          include: [
+            {
+              model: File,
+              as: 'avatar',
+              attributes: ['id', 'path', 'url'],
+            },
+          ],
+        },
+      ],
+    });
+    return res.json(appointments);
+  }
+  ...
+```
+
+Para entender o que estamos fazendo:
+
+Fizemos a chamada de um metodo `index` que como aprendemos no inicio do curso é para listagem de tudo que esta dentro de uma tabela, e pegamos esse dados baseados na `id` e se o usuario nao cancelou o agendamento, ali no `order['date']` estamos dizendo para serem listados do mais recente para o mais antigo, e somente exibir os dados `id` e `date`  do appointment, depois disso incluimos os dados tais como foto do `provider` fazendo referencia ao model `User`.
+
+## Aula 24 - Aplicando paginaçāo
+
+Quando o usuario for carregar os agendamento no Frontend e tiver 200 agendamentos no banco de dados nao é legal aparecerem os 200, entao vamos dividir em paginas que vao conter 20 agendamentos cada.
+
+La no `AppointmentController.js`: 
+
+```
+async index(req, res) {
+  * const { page = 1 } = req.query;
+
+    const appointments = await Appointment.findAll({
+      where: { user_id: req.userId, canceled_at: null },
+      order: ['date'],
+      attributes: ['id', 'date'],
+    * limit: 20,
+    * offset: (page - 1) * 20,
+      include: [
+        {
+          model: User,
+          as: 'provider',
+          attributes: ['id', 'name'],
+          include: [
+            {
+              model: File,
+              as: 'avatar',
+              attributes: ['id', 'path', 'url'],
+            },
+          ],
+        },
+      ],
+    });
+    return res.json(appointments);
+  }
+```
+
+A conta é bem simples, a `const page` por padrao comeca em 1, ali dizemos para o`offset` pegar o valor de `page` diminuir de 1 e listar os proximos 20.
+
+ex: se page for 1, ele vai diminuir de 1 e multiplicar por 20 e exibir os proximos 20 resultados(1 - 1) * 20 = 0, ou seja, nao vai pular nada e vai exibir os 20 primeiros, se page fosse 2, ele ia fazer a conta e multiplicar e ia dar 20, ou seja, ia pular 20 agendamentos e exibir os proximos 20
+
+
+
 
 
 
