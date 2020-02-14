@@ -699,6 +699,64 @@ A conta é bem simples, a `const page` por padrao comeca em 1, ali dizemos para 
 
 ex: se page for 1, ele vai diminuir de 1 e multiplicar por 20 e exibir os proximos 20 resultados(1 - 1) * 20 = 0, ou seja, nao vai pular nada e vai exibir os 20 primeiros, se page fosse 2, ele ia fazer a conta e multiplicar e ia dar 20, ou seja, ia pular 20 agendamentos e exibir os proximos 20.
 
+## Aula 26 - Listando agenda do prestador
+
+Quando o determinado prestador de servicos entrar na aplicacao ele vai ver um painel com a listagem de todos os agendamentos que ele tem no dia, vai ser uma listagem unica pra cada provider.
+
+Criamos um novo controller `ScheduleController.js`:
+
+```
+import { startOfDay, endOfDay, parseISO } from 'date-fns';
+import { Op } from 'sequelize';
+
+import User from '../models/User';
+import Appointment from '../models/Appointment';
+
+class ScheduleController {
+  async index(req, res) {
+    const checkUserProvider = await User.findOne({
+      where: { id: req.userId, provider: true },
+    });
+
+    if (!checkUserProvider) {
+      return res.status(401).json({ error: 'User is not a provider' });
+    }
+
+    const { date } = req.query;
+    const parsedDate = parseISO(date);
+
+    const appointments = await Appointment.findAll({
+      where: {
+        provider_id: req.userId,
+        canceled_at: null,
+        date: {
+          [Op.between]: [startOfDay(parsedDate), endOfDay(parsedDate)],
+        },
+      },
+      order: ['date'],
+    });
+
+    return res.json(appointments);
+  }
+}
+
+export default new ScheduleController();
+```
+Vamos primeiro verificar se o usuario é um provider, depois vamos listar todos os agendamentos daquele prestador de servico, que nao estejam cancelados, e que estejam entre o inicio do dia (00:00:00) e o final do dia(23:59:59) e vamos ordenar esses agendamentos por data.
+
+
+Em `routes.js`: 
+
+```
+...
+import ScheduleController from './app/controllers/ScheduleController';
+...
+routes.get('/schedule', ScheduleController.index);
+...
+```
+
+
+
 
 
 
