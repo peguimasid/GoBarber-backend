@@ -696,7 +696,7 @@ async index(req, res) {
 
 A conta é bem simples, a `const page` por padrao comeca em 1, ali dizemos para o`offset` pegar o valor de `page` diminuir de 1 e listar os proximos 20.
 
-ex: se page for 1, ele vai diminuir de 1 e multiplicar por 20 e exibir os proximos 20 resultados(1 - 1) * 20 = 0, ou seja, nao vai pular nada e vai exibir os 20 primeiros, se page fosse 2, ele ia fazer a conta e multiplicar e ia dar 20, ou seja, ia pular 20 agendamentos e exibir os proximos 20
+ex: se page for 1, ele vai diminuir de 1 e multiplicar por 20 e exibir os proximos 20 resultados(1 - 1) * 20 = 0, ou seja, nao vai pular nada e vai exibir os 20 primeiros, se page fosse 2, ele ia fazer a conta e multiplicar e ia dar 20, ou seja, ia pular 20 agendamentos e exibir os proximos 20.
 
 
 
