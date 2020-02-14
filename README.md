@@ -659,7 +659,7 @@ Para entender o que estamos fazendo:
 
 Fizemos a chamada de um metodo `index` que como aprendemos no inicio do curso é para listagem de tudo que esta dentro de uma tabela, e pegamos esse dados baseados na `id` e se o usuario nao cancelou o agendamento, ali no `order['date']` estamos dizendo para serem listados do mais recente para o mais antigo, e somente exibir os dados `id` e `date`  do appointment, depois disso incluimos os dados tais como foto do `provider` fazendo referencia ao model `User`.
 
-## Aula 24 - Aplicando paginaçāo
+## Aula 25 - Aplicando paginaçāo
 
 Quando o usuario for carregar os agendamento no Frontend e tiver 200 agendamentos no banco de dados nao é legal aparecerem os 200, entao vamos dividir em paginas que vao conter 20 agendamentos cada.
 
@@ -693,6 +693,7 @@ async index(req, res) {
     return res.json(appointments);
   }
 ```
+Obs: tire os asteriscos do codigo.
 
 A conta é bem simples, a `const page` por padrao comeca em 1, ali dizemos para o`offset` pegar o valor de `page` diminuir de 1 e listar os proximos 20.
 
