@@ -556,4 +556,71 @@ routes.post('/appointments', AppointmentController.store);
 ...
 ```
 
+## Aula 23 - Validações de agendamento.
+
+Vamos fazer uma validacao para verificar se a data que o usuario colocou no agendamento é uma data que esta para acontecer e nao uma data passada. A segunda validacao é pra verificar se a data de agendamento ja nao esta reservada(somente um agendamento por hora).
+
+Vamos baixar uma biblioteca para lidar co datas dentro da nossa aplicacao:
+
+`yarn add date-fns@next`
+
+Dentro de `AppointmentController.js`:
+
+```
+import { startOfHour, parseISO, isBefore } from 'date-fns';
+
+// Verificar se a data ja passou
+    const hourStart = startOfHour(parseISO(date));
+
+    if (isBefore(hourStart, new Date())) {
+      return res.status(400).json({ error: 'Past dates are not permited' });
+    }
+
+    // Verificar se o provider ja nao tem algum marcado naquele horario
+    const checkAvailability = await Appointment.findOne({
+      where: {
+        provider_id,
+        canceled_at: null,
+        date: hourStart,
+      },
+    });
+
+    if (checkAvailability) {
+      return res
+        .status(400)
+        .json({ error: ' Appointment date is not available' });
+    }
+
+
+```
+
+E o nosso `Appointment.create` que estava assim:
+
+```
+const appointment = await Appointment.create({
+      user_id: req.userId,
+      provider_id,
+      date,
+    });
+```
+
+Vai ficar assim: 
+
+```
+const appointment = await Appointment.create({
+      user_id: req.userId,
+      provider_id,
+      date: hourStart,
+    });
+```
+
+Isso garante que nao sejam criados agendamentos em horarios quebrados.
+
+
+
+
+
+
+
+
 
