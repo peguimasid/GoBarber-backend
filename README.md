@@ -14,9 +14,7 @@ Quando precisa enviar imagem para o servidor, tem que ser como `Multpart-data` (
 
 Instalando o `multer`: 
 
-```
-yarn add multer
-```
+`yarn add multer`
 
 Criar uma pasta fora do `src`, para armazenar as imagens: `tmp/uploads`, dentro da pasta `tmp` criar outra pasta `uploads`, onde vai ficar os arquivos físicos de uploads de arquivos.
 
@@ -199,9 +197,7 @@ Para fazer o relacionamento precisamsos adicionar as chaves primária de files n
 
 Para isso teremos que criar uma migration para atualizar essas tabelas:
 
-```
-yarn sequelize migration:create --name=add-avatar-field-to-users
-```
+`yarn sequelize migration:create --name=add-avatar-field-to-users`
 
 Adicionamos a coluna `avatar_id` de dentro da tabela  `users`, sendo referenciadas pela tabela `files` no atributo `ID` que é a chave primária da tabela `files`. E quando desfazer a migration é só apagar o atributo `avatar_id` de `users`.
 
@@ -232,7 +228,7 @@ Depois precisa relacionar o Users com Files de dentro do Model de users no códi
 
 Adicionando um método para associar as duas entidades:
 
-`Users.js`:
+`User.js`:
 ```
 ...
 static associate(models) {
@@ -754,6 +750,106 @@ import ScheduleController from './app/controllers/ScheduleController';
 routes.get('/schedule', ScheduleController.index);
 ...
 ```
+
+## Aula 27 - Configurando MongoDB
+
+Vamos conectar a outro banco de dados (já estamos conectados ao PostgresSQL) pois vamos ter dados que nao vao ser relacionados dentro da nossa aplicacao e por isso vamos usar um banco de dados nao relacional (NoSQL) chamado MongoDB.
+
+Para iniciar rode o comando na pasta do projeto: 
+
+`docker run --name mongobarber -p 27017:27017 -d -t mongo `
+
+Se aparecer um codigo tipo assim é pq funcionou:
+
+`22576dfaecd1c24a9128db110b0a0235f7243b0ee73f4ae0b8ffc2646287f3f3`
+
+Para ver se o mongo esta rodando vamos no navegador e digitamos `localhost:27017` e se aparecer essa mensagem é porque o mongo ja esta rodando:
+
+`It looks like you are trying to access MongoDB over HTTP on the native driver port.`
+
+#### Conectando a aplicaçāo com o MongoDB
+
+Assim como instalamos o `Sequelize` para o PostgresSQL vamos intalar o `Mongoose` para lidar com o MongoDB:
+
+`yarn add mongoose`
+
+Agora pra configura-lo vamos no nosso arquivo ja existente em `src > database > index.js` e o arquivo que estava assim:
+
+```
+import Sequelize from 'sequelize';
+
+import User from '../app/models/User';
+import File from '../app/models/File';
+import Appointment from '../app/models/Appointment';
+
+import databaseConfig from '../config/database';
+
+const models = [User, File, Appointment];
+
+class Database {
+  constructor() {
+    this.init();
+  }
+
+  init() {
+    this.connection = new Sequelize(databaseConfig);
+
+    models
+      .map(model => model.init(this.connection))
+      .map(model => model.associate && model.associate(this.connection.models));
+  }
+}
+
+export default new Database();
+
+```
+
+vai ficar assim (tire os *):
+
+```
+import Sequelize from 'sequelize';
+* import mongoose from 'mongoose';
+
+import User from '../app/models/User';
+import File from '../app/models/File';
+import Appointment from '../app/models/Appointment';
+
+import databaseConfig from '../config/database';
+
+const models = [User, File, Appointment];
+
+class Database {
+  constructor() {
+    this.init();
+  * this.mongo();
+  }
+
+  init() {
+    this.connection = new Sequelize(databaseConfig);
+
+    models
+      .map(model => model.init(this.connection))
+      .map(model => model.associate && model.associate(this.connection.models));
+  }
+
+ * mongo() {
+ *   this.mongoConnection = mongoose.connect(
+ *     'mongodb://localhost:27017/gobarber',
+ *     {
+ *       useNewUrlParser: true,
+ *       useFindAndModify: true,
+ *       useUnifiedTopology: true,
+ *     }
+ *   );
+ * }
+}
+
+export default new Database();
+
+```
+Se rodarmos a aplicacao `yarn dev` ou `yarn nodemon` no meu caso e nao der erro é porque foi configurado certo e ja esta funcionando.
+
+
 
 
 
