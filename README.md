@@ -767,7 +767,7 @@ Para ver se o mongo esta rodando vamos no navegador e digitamos `localhost:27017
 
 `It looks like you are trying to access MongoDB over HTTP on the native driver port.`
 
-### Conectando a aplicaçāo com o MongoDB:
+### -Conectando a aplicaçāo com o MongoDB:
 
 Assim como instalamos o `Sequelize` para o PostgresSQL vamos intalar o `Mongoose` para lidar com o MongoDB:
 
