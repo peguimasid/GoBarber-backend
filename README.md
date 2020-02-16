@@ -849,6 +849,78 @@ export default new Database();
 ```
 Se rodarmos a aplicacao `yarn dev` ou `yarn nodemon` no meu caso e nao der erro é porque foi configurado certo e ja esta funcionando.
 
+## Aula 28 - Notificando novos agendamentos
+
+Vamos enviar um notificacao pro prestador de servicos toda vez que ele receber um novo agendamento, e vamos utilizar o Mongo para armazenar essas notificacoes.
+
+Dentro da pasta `app` vamos criar um nova pasta chamada `schemas` e dentro dela vamos criar um arquivo chamado `Notification.js`.
+
+Dentro de `Notification.js`:
+
+```
+import mongoose from 'mongoose';
+
+const NotificationSchema = new mongoose.Schema(
+  {
+    content: {
+      type: String,
+      required: true,
+    },
+    user: {
+      type: Number,
+      required: true,
+    },
+    read: {
+      type: Boolean,
+      required: true,
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
+
+export default mongoose.model('Notification', NotificationSchema);
+```
+A vantagem do NoSQL é que nao precisamos fazer uma `migration` para cada `model`, e podemos tambem importar diretamente a `model` no arquivo que queremos e já sair utilizando.
+
+Depois disso vamos em `AppointmentController.js` pois é onde gerenciamos os agendamentos.
+
+Em `AppointmentController.js`(tire os *):
+
+```
+...
+  import { startOfHour, parseISO, isBefore, ** format ** } from 'date-fns';
+  import pt from 'date-fns/locale/pt';
+...
+  import Notification from '../schemas/Notification';
+...
+
+```
+
+
+ainda em `AppointmentController.js` dentro do metodo `store()` logo após criar o `appointment`:
+
+```
+const user = await User.findByPk(req.userId);
+    const formattedDate = format(
+      hourStart,
+      "'dia' dd 'de' MMMM', às' H:mm'h'",
+      { locale: pt }
+    );
+
+    await Notification.create({
+      content: `Novo agendamento de ${user.name} para ${formattedDate}`,
+      user: provider_id,
+    });
+
+```
+
+Agora se criarmos um agendamento(appointment), ele vai armazenar no banco de dados a notificacao para futuramente enviarmos em notificacao para o prestador de servico(provider).
+
+
+
+
 
 
 
