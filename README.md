@@ -985,4 +985,45 @@ async update(req, res) {
   }
 ```
 
-Passamos a id da notificacao, depois passamos o que ira atualizar `{ read: true }` quando chamarmos aquela rota, pois a pessoa nao escolhe se vai vizualizar, a partir do momento que ela entra ja muda o `read` para `true` e depois passamos esse esse `{ new: true }` que ira dizer para o mongo retornar, pois se nao ele ira atualizar no banco de dados mas nao retornara o valor
+Passamos a id da notificacao, depois passamos o que ira atualizar `{ read: true }` quando chamarmos aquela rota, pois a pessoa nao escolhe se vai vizualizar, a partir do momento que ela entra ja muda o `read` para `true` e depois passamos esse esse `{ new: true }` que ira dizer para o mongo retornar, pois se nao ele ira atualizar no banco de dados mas nao retornara o valor.
+
+## Aula 31 - Cancelamento de Agendamento
+
+O usuario que fez o agendamento vai poder cancelar, mas somente se ele estiver a duas horas de distancia da hora marcada.
+
+Em `routes.js`:
+
+`routes.delete('/appointments/:id', AppointmentController.delete);`
+
+Vamos em `AppointmentController` em criamos um metodo `async delete()`:
+
+```
+...
+import { startOfHour, parseISO, isBefore, format, ** subHours ** } from 'date-fns';
+...
+
+ async delete(req, res) {
+    const appointment = await Appointment.findByPk(req.params.id);
+
+    if (appointment.user_id !== req.userId) {
+      return res.status(401).json({
+        error: " You dont't have permission to cancel this appointment",
+      });
+    }
+
+    const dateWithSub = subHours(appointment.date, 2);
+
+    if (isBefore(dateWithSub, new Date())) {
+      return res.status(401).json({
+        error: 'You can only cancel appointments 2 hours in advance.',
+      });
+    }
+
+    appointment.canceled_at = new Date();
+
+    await appointment.save();
+
+    return res.json(appointment);
+  }
+```
+Primeiro verificamos se a pessoa que esta tentando cancelar foi a mesma que fez o agendamento, depois disso verificamos se a pessoa esta cancelando com duas horas de antecedencia, caso de tudo certo nos passamos o horario atual no `canceled_at` e o horario é cancelado.
