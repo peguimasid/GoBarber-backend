@@ -919,19 +919,70 @@ const user = await User.findByPk(req.userId);
 Agora se criarmos um agendamento(appointment), ele vai armazenar no banco de dados a notificacao para futuramente enviarmos em notificacao para o prestador de servico(provider).
 
 
+## Aula 29 - Listando Notificações do Usuário
 
+Vamos criar uma rota que lista as notificações do prestador de serviço.
 
+Vamos em `routes.js`:
 
+```
+...
+import NotificationController from './app/controllers/NotificationController';
+...
+routes.get('/notifications', NotificationController.index);
+...
+```
 
+depois vamos la na pasta `controllers` e criamos um arquivo `NotificationController.js`
 
+dentro de `NotificationController.js`:
 
+```
+import User from '../models/User';
+import Notification from '../schemas/Notification';
 
+class NotificationController {
+  async index(req, res) {
+    const isProvider = await User.findOne({
+      where: { id: req.userId, provider: true },
+    });
+    if (!isProvider) {
+      return res
+        .status(401)
+        .json({ error: 'Only providers can view notifications' });
+    }
 
+    const notifications = await Notification.find({
+      user: req.userId,
+    })
+      .sort({ createdAt: 'desc' })
+      .limit(20);
 
+    return res.json(notifications);
+  }
+}
 
+export default new NotificationController();
+```
+Primeiro estamos verificando se a pessoa que esta tentando lista é um prestador de servicos, depois a gente pega somente as notificacoes que tem pro usuario que esta tentando listar(nao queremos que listem todos os agendamento de todos os prestadores) e exibindo no final.
 
+## Aula 30 - Marcar notificações como lidas
 
+Dentro de `routes.js`:
 
+`routes.put('/notifications/:id', NotificationController.update);`
 
+Em `NotificationController` vamos criar um novo metodo `update`:
 
+```
+async update(req, res) {
+    const notification = await Notification.findByIdAndUpdate(
+      req.params.id,
+      { read: true },
+      { new: true }
+    );
+    return res.json(notification);
+  }
+```
 
+Passamos a id da notificacao, depois passamos o que ira atualizar `{ read: true }` quando chamarmos aquela rota, pois a pessoa nao escolhe se vai vizualizar, a partir do momento que ela entra ja muda o `read` para `true` e depois passamos esse esse `{ new: true }` que ira dizer para o mongo retornar, pois se nao ele ira atualizar no banco de dados mas nao retornara o valor
