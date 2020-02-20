@@ -1027,3 +1027,234 @@ import { startOfHour, parseISO, isBefore, format, ** subHours ** } from 'date-fn
   }
 ```
 Primeiro verificamos se a pessoa que esta tentando cancelar foi a mesma que fez o agendamento, depois disso verificamos se a pessoa esta cancelando com duas horas de antecedencia, caso de tudo certo nos passamos o horario atual no `canceled_at` e o horario é cancelado.
+
+# Aula 32 - Configurando Nodemailer
+
+Toda vez que um agendamento for cancelado, o prestador de serviço recebera um email dizendo que foi cancelado.
+
+Instalamos o *nodemailer*:
+
+`yarn add nodemailer`
+
+Vamos usar para enviar o email uma ferramenta chamada *Mailtrap* qur funciona apenas em ambiente de desenvolvimento, se formos publicar a aplicacao podemos usar outros tais como *Mailgun* e *Sparkpost*.
+
+Para configurar o *Mailtrap*:
+
+1- entramos no site [Mailtrap.io](https://mailtrap.io/);
+2- Cria um conta no plano gratuito;
+3- Criamos uma nova cixa de email em *Create Inbox*;
+4- Mudamos o `Integrations` para `Nodemailer`;
+5- Copiamos os dados de `host`, `port` e `auth`;
+
+Agora dentro de `src > config` criamos um arquivo chamado `mail.js`.
+
+Dentro de `mail.js` colocamos os dados que pegamos no mailtrap (`host`, `port` e `auth`) e mais algumas configurações:
+
+```
+export default {
+  host: 'smtp.mailtrap.io',
+  port: 2525,
+  secure: false,
+  auth: {
+    user: 'e5a194ac1ed80d',  // Coloque o que esta no seu!
+    pass: 'a9b90f6992efee',  // Coloque o que esta no seu!
+  },
+  default: {
+    from: 'GoBarber <noreply@gobarber.com>',
+  },
+};
+```
+
+Dentro de `src` criamos uma pasta `lib` e dentro um arquivo chamado `Mail.js`.
+
+Dentro de `Mail.js`:
+
+```
+import nodemailer from 'nodemailer';
+import mailConfig from '../config/mail';
+
+class Mail {
+  constructor() {
+    const { host, port, secure, auth } = mailConfig;
+
+    this.transporter = nodemailer.createTransport({
+      host,
+      port,
+      secure,
+      auth: auth.user ? auth : null,
+    });
+  }
+
+  sendMail(message) {
+    return this.transporter.sendMail({
+      ...mailConfig.default,
+      ...message,
+    });
+  }
+}
+
+export default new Mail();
+```
+Passamos os dados para o transport, depois criamos um metodo `sendMail()` que pega todos os dados de `mailConfig.default` e de `message`.
+
+Acabando isso vamos em `AppointmentController`:
+
+```
+...
+import Mail from '../../lib/Mail';
+...
+```
+e mudamos a primeira parte do `async delete()` para isso:
+
+```
+ const appointment = await Appointment.findByPk(req.params.id, {
+      include: [
+        {
+          model: User,
+          as: 'provider',
+          attributes: ['name', 'email'],
+        },
+      ],
+    });
+```
+
+ Ainda em `AppointmentController` logo apos fazer o cancelamento enviamos assim:
+
+ ```
+ await Mail.sendMail({
+      to: `${appointment.provider.name} <${appointment.provider.email}>`,
+      subject: 'Agendamento cancelado',
+      text: 'Você tem um novo cancelamento',
+    });
+ ```
+
+ agora se cancelarmos o agendamento o prestador recebera um email, por enquanto ele recebe somente um texto, mas futuramente recebera algo mais bem elaborado. Para verificar se funcionou, quando cancelar um agendamento e voce voltar no *Mailtrap* vai estar la o email.
+
+## Aula 33 - Configurando templates de e-mail
+
+Vamos usar templates de email para que possamos enviar emails utilizando *HTML*, *CSS* ou como a gente preferir.
+
+Para isso vamos instalar duas extensoes que vao permitir que a gente utilize um *Template Engine* que sao arquivos html que podem receber variaveis do node.
+
+O que vamos utilizar se chama [Handlebars](https://handlebarsjs.com/)
+
+Para comecar temos que instalar o `express-handlebars` e a dependecia do nodemialer que vai lidar com ele: 
+
+`yarn add express-handlebars nodemailer-express-handlebars`
+
+Vamos em `Mail.js`:
+
+```
+...
+import { resolve } from 'path';
+import exphbs from 'express-handlebars';
+import nodemailerhbs from 'nodemailer-express-handlebars';
+...
+```
+depois dentro de `contructor()`:
+
+`this.configureTemplates()`
+
+E  depois vamos criar o metodo `configureTemplates()`:
+
+```
+configureTemplates() {
+    const viewPath = resolve(__dirname, '..', 'app', 'views', 'emails');
+
+    this.transporter.use(
+      'compile',
+      nodemailerhbs({
+        viewEngine: exphbs.create({
+          layoutsDir: resolve(viewPath, 'layouts'),
+          partialsDir: resolve(viewPath, 'partials'),
+          defaultLayout: 'default',
+          extname: '.hbs',
+        }),
+        viewPath,
+        extName: '.hbs',
+      })
+    );
+  }
+```
+Depois disso vamos la em `src > app` e criamos uma pasta `views` dentro dela criamos uma pasta chamada `emails` e dentro de emails criamos duas outras pastas `layouts` e `partials`.
+
+Dentro da pasta `emails` criamos um arquivo `cancellation.hbs`.
+Dentro de `emails > layouts` criamos um arquivo `default.hbs`.
+
+
+Dentro de `default.hbs` vamos enviar algo que sera padrao em todos os envios de email:
+
+`default.hbs`:
+
+```
+<div style="font-family: Arial, Helvetica, sans-serif; font-size: 16px; line-height: 1.6; color: #222; max-width: 600px;">
+  {{{ body }}}
+  {{> footer}}
+</div>
+```
+
+Esse `{{{ body }}}` que passamos dentro da `div` é onde ira todo corpo da nossa mensagem, e o `{{> footer}}` é onde sera colocada nossa partial `footer`
+
+Dentro de `emails > partials` criamos um arquivo `footer.hbs`:
+
+`footer.hbs`:
+
+```
+<br />
+Equipe GoBarber
+```
+
+Agora com tudo configurado podemos escrever nosso email no `cancellation.hbs`:
+
+```
+<strong>Olá {{ provider }}</strong>
+<p>Houve um cancelamento de horario, confira os detalher abaixo:</p>
+<p>
+  <strong>Cliente: </strong> {{ user }} <br />
+  <strong>Data/Hora: </strong> {{ date }} <br />
+  <br />
+  <small>
+    O horario está novamente disponível para novos agendamentos
+  </small>
+</p>
+```
+
+Como podemos ver dizemos as variaveis `user`, `provider` e `date` mas nao importamos elas em lugar nenhum, ou seja, ele nao vai reconhecer, para fazer isso vamos em `AppointmentController` e nosso `await Mail.sendMail()` que estava assim: 
+
+```
+await Mail.sendMail({
+      to: `${appointment.provider.name} <${appointment.provider.email}>`,
+      subject: 'Agendamento cancelado',
+      text: 'Você tem um novo cancelamento',
+    });
+```
+
+vai ficar assim:
+
+```
+await Mail.sendMail({
+      to: `${appointment.provider.name} <${appointment.provider.email}>`,
+      subject: 'Agendamento cancelado',
+      template: 'cancellation',
+      context: {
+        provider: appointment.provider.name,
+        user: appointment.user.name,
+        date: format(appointment.date, "'dia' dd 'de' MMMM', às' H:mm'h'", {
+          locale: pt,
+        }),
+      },
+    });
+
+```
+Passamos dentro de `template` o que enviariamos para o provedor quando cancelar, e dentro de `context` passamos todas as variaveis que usamos dentro do nosso template `cancellation.hbs`, para poderem ser interpretadas por ele.
+
+
+incluimos o `user` la no `include` do appointment:
+
+```
+{
+  model: User,
+  as: 'user',
+  attributes: ['name'],
+ }
+```
