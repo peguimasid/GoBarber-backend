@@ -1138,7 +1138,7 @@ Para isso vamos instalar duas extensoes que vao permitir que a gente utilize um 
 
 O que vamos utilizar se chama [Handlebars](https://handlebarsjs.com/)
 
-Para comecar temos que instalar o `express-handlebars` e a dependecia do nodemialer que vai lidar com ele: 
+Para comecar temos que instalar o `express-handlebars` e a dependecia do Nodemailer que vai lidar com ele: 
 
 `yarn add express-handlebars nodemailer-express-handlebars`
 
