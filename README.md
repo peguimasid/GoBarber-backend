@@ -1032,19 +1032,19 @@ Primeiro verificamos se a pessoa que esta tentando cancelar foi a mesma que fez 
 
 Toda vez que um agendamento for cancelado, o prestador de serviço recebera um email dizendo que foi cancelado.
 
-Instalamos o ***nodemailer***:
+Instalamos o ***Nodemailer***:
 
 `yarn add nodemailer`
 
-Vamos usar para enviar o email uma ferramenta chamada **Mailtrap** qur funciona apenas em ambiente de desenvolvimento, se formos publicar a aplicacao podemos usar outros tais como **Mailgun** e **Sparkpost**.
+Vamos usar para enviar o email uma ferramenta chamada ***Mailtrap*** qur funciona apenas em ambiente de desenvolvimento, se formos publicar a aplicacao podemos usar outros tais como ***Mailgun*** e ***Sparkpost***.
 
 Para configurar o ***Mailtrap***:
 
-1- entramos no site [Mailtrap.io](https://mailtrap.io/);
-2- Cria um conta no plano gratuito;
-3- Criamos uma nova caixa de email em *Create Inbox*;
-4- Mudamos o `Integrations` para `Nodemailer`;
-5- Copiamos os dados de `host`, `port` e `auth`;
+1. entramos no site [Mailtrap.io](https://mailtrap.io/);
+2. Cria um conta no plano gratuito;
+3. Criamos uma nova caixa de email em ***Create Inbox***;
+4. Mudamos o `Integrations` para `Nodemailer`;
+5. Copiamos os dados de `host`, `port` e `auth`;
 
 Agora dentro de `src > config` criamos um arquivo chamado `mail.js`.
 
@@ -1128,13 +1128,13 @@ e mudamos a primeira parte do `async delete()` para isso:
     });
  ```
 
- agora se cancelarmos o agendamento o prestador recebera um email, por enquanto ele recebe somente um texto, mas futuramente recebera algo mais bem elaborado. Para verificar se funcionou, quando cancelar um agendamento e voce voltar no *Mailtrap* vai estar la o email.
+ agora se cancelarmos o agendamento o prestador recebera um email, por enquanto ele recebe somente um texto, mas futuramente recebera algo mais bem elaborado. Para verificar se funcionou, quando cancelar um agendamento e voce voltar no ***Mailtrap*** vai estar la o email.
 
 ## Aula 33 - Configurando templates de e-mail
 
-Vamos usar templates de email para que possamos enviar emails utilizando *HTML*, *CSS* ou como a gente preferir.
+Vamos usar templates de email para que possamos enviar emails utilizando ***HTML***, ***CSS*** ou como a gente preferir.
 
-Para isso vamos instalar duas extensoes que vao permitir que a gente utilize um *Template Engine* que sao arquivos html que podem receber variaveis do node.
+Para isso vamos instalar duas extensoes que vao permitir que a gente utilize um ***Template Engine*** que sao arquivos html que podem receber variaveis do node.
 
 O que vamos utilizar se chama [Handlebars](https://handlebarsjs.com/)
 
