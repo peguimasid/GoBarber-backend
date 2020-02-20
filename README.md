@@ -1032,17 +1032,17 @@ Primeiro verificamos se a pessoa que esta tentando cancelar foi a mesma que fez 
 
 Toda vez que um agendamento for cancelado, o prestador de serviço recebera um email dizendo que foi cancelado.
 
-Instalamos o *nodemailer*:
+Instalamos o ***nodemailer***:
 
 `yarn add nodemailer`
 
-Vamos usar para enviar o email uma ferramenta chamada *Mailtrap* qur funciona apenas em ambiente de desenvolvimento, se formos publicar a aplicacao podemos usar outros tais como *Mailgun* e *Sparkpost*.
+Vamos usar para enviar o email uma ferramenta chamada **Mailtrap** qur funciona apenas em ambiente de desenvolvimento, se formos publicar a aplicacao podemos usar outros tais como **Mailgun** e **Sparkpost**.
 
-Para configurar o *Mailtrap*:
+Para configurar o ***Mailtrap***:
 
 1- entramos no site [Mailtrap.io](https://mailtrap.io/);
 2- Cria um conta no plano gratuito;
-3- Criamos uma nova cixa de email em *Create Inbox*;
+3- Criamos uma nova caixa de email em *Create Inbox*;
 4- Mudamos o `Integrations` para `Nodemailer`;
 5- Copiamos os dados de `host`, `port` e `auth`;
 
