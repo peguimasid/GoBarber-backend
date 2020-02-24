@@ -1415,7 +1415,7 @@ Agora se tudo deu certo quando cancelarmos um email a resposta sera imediata, na
 
 ## Aula 35 - Monitorando falhas na fila
 
-Vamos em `src > lib> Queue.js`e substituimos:
+Vamos em `src > lib > Queue.js`e substituimos:
 
 ```
 processQueue() {
