@@ -1413,3 +1413,33 @@ Para iniciar as filas `yarn queue`.
 
 Agora se tudo deu certo quando cancelarmos um email a resposta sera imediata, nao demorara mais 3 segundos e o email chegara no ***Mailtrap***
 
+## Aula 35 - Monitorando falhas na fila
+
+Vamos em `src > lib> Queue.js`e substituimos:
+
+```
+processQueue() {
+    jobs.forEach(job => {
+      const { bee, handle } = this.queues[job.key];
+
+      bee.process(handle);
+    });
+```
+
+por
+
+```
+processQueue() {
+    jobs.forEach(job => {
+      const { bee, handle } = this.queues[job.key];
+
+*      bee.on('failed', this.handleFailure).process(handle);
+    });
+  }
+
+*  handleFailure(job, err) {
+*    console.log(`Queue ${job.queue.name}: FAILED`, err);
+*  }
+```
+
+O que estamos fazendo é passar um metodo `on('failed')` que é documentado no `bee-queue`, ou seja, nao estamos inventando ele, depois do lado passamos o `this.handleFailure` que é uma funcao que criamos onde ela da um `console.log` no erro.
