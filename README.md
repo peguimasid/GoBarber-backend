@@ -1258,3 +1258,158 @@ incluimos o `user` la no `include` do appointment:
   attributes: ['name'],
  }
 ```
+
+## Aula 34 - Configurando fila com Redis
+
+Ao fazer os testes enviando emails para os prestadores de serviços podemos perceber que o envio demora ate 3 segundos para ser feito, enquanto outras rotas sao chamadas em milesimos, para diminuir esse tempo de envio nos iremos usar o conceito de ***Filas*** ou ***Background Jobs*** que nos permitem diminuir esse tempo de envio, dar prioridades em tipos de emails sobre outros, tentar reenviar o email se ocorrer um erro e algumas outras coisas.
+
+Para isso vamos usar um banco ***NoSQL*** chamado ***Redis*** que so armazena dois tipos de dados: ***Chave*** e ***Valor*** fazendo com que a gente consiga armazenar milhares de dados e sendo muito mais performatico.
+
+### Iniciando:
+
+`docker run --name redisbarber -p 6379:6379 -d -t redis:alpine `
+
+se tudo deu certo vamos receber um codigo no final com varios numeros e letras e se rodarmos `docker ps` ele vai estar rodando la.
+
+
+Agora iremos instalar uma ferramenta de filas chamada ***Bee Queue***:
+
+`yarn add bee-queue`
+
+Dentro de `src > lib` criamos um aqruivo chamado `Queue.js`.
+
+`Queue.js`:
+
+```
+import Bee from 'bee-queue';
+import CancellationMail from '../app/jobs/CancellationMail';
+import redisConfig from '../config/redis';
+
+const jobs = [CancellationMail];
+
+class Queue {
+  constructor() {
+    this.queues = {};
+
+    this.init();
+  }
+
+  init() {
+    jobs.forEach(({ key, handle }) => {
+      this.queues[key] = {
+        bee: new Bee(key, {
+          redis: redisConfig,
+        }),
+        handle,
+      };
+    });
+  }
+
+  add(queue, job) {
+    return this.queues[queue].bee.createJob(job).save();
+  }
+
+  processQueue() {
+    jobs.forEach(job => {
+      const { bee, handle } = this.queues[job.key];
+
+      bee.process(handle);
+    });
+  }
+}
+
+export default new Queue();
+
+```
+O que estamos fazendo é pegar todos os `jobs`, armazenando dentro da variavel `this.queues`, depois ali no metodo `init()` nos armazenamos a nossa fila e estabelecemos a conexao com o banco de dados ***Redis*** e depois armazenamos o metodo `handle` que é o metodo que vai processar nosso `job`, e vai disparar o email ou fazer a tarefa que for programado pra ser feita. 
+
+
+Dentro de `src > app` criamos uma pasta chamada `jobs` e dentro dela criamos um arquivo chamado `CancellationMail.js`.
+
+`CancellationMail.js`:
+
+```
+import { format, parseISO } from 'date-fns';
+import pt from 'date-fns/locale/pt';
+import Mail from '../../lib/Mail';
+
+class CancellationMail {
+  get key() {
+    return 'CancellationMail';
+  }
+
+  async handle({ data }) {
+    const { appointment } = data;
+
+    await Mail.sendMail({
+      to: `${appointment.provider.name} <${appointment.provider.email}>`,
+      subject: 'Agendamento cancelado',
+      template: 'cancellation',
+      context: {
+        provider: appointment.provider.name,
+        user: appointment.user.name,
+        date: format(
+          parseISO(appointment.date),
+          "'dia' dd 'de' MMMM', às' H:mm'h'",
+          {
+            locale: pt,
+          }
+        ),
+      },
+    });
+  }
+}
+
+export default new CancellationMail();
+
+```
+
+Dentro de `src > config` criamos um arquivo `redis.js`.
+
+`redis.js`:
+
+```
+export default {
+  host: '127.0.0.1',
+  port: 6379,
+};
+```
+
+Agora vamos em `AppointmentController`:
+
+```
+...
+import Queue from '../../lib/Queue';
+import CancellationMail from '../jobs/CancellationMail';
+...
+```
+
+e onde estava o `Mail.sendMail()` vai ficar assim:
+
+```
+await Queue.add(CancellationMail.key, {
+      appointment,
+    });
+```
+
+Dentro de `src` criamos um arquivo `queue.js`:
+
+`queue.js`:
+
+```
+import Queue from './lib/Queue';
+
+Queue.processQueue();
+
+```
+
+agora vamos em `package.json` e dentro de `scripts` colocamos assim:
+
+`"queue": "nodemon src/queue.js"`
+
+pois nosso servidor de filas vai rodar independente do servidor normal pra nao influenciar na performace da nossa aplicacao.
+
+Para iniciar as filas `yarn queue`.
+
+Agora se tudo deu certo quando cancelarmos um email a resposta sera imediata, nao demorara mais 3 segundos e o email chegara no ***Mailtrap***
+
