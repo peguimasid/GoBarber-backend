@@ -1443,3 +1443,101 @@ processQueue() {
 ```
 
 O que estamos fazendo é passar um metodo `on('failed')` que é documentado no `bee-queue`, ou seja, nao estamos inventando ele, depois do lado passamos o `this.handleFailure` que é uma funcao que criamos onde ela da um `console.log` no erro.
+
+## Aula 36 - Listando horários disponíveis
+
+Vamos listar todos os horarios disponiveis do prestador de servicos escolhido entre os horarios de 8:00 da manha ate 19:00 da noite.
+
+Primeiro vamos criar um `controller` para podermos colocarmos as regras de negocio chamado `AvailableController`:
+
+`AvailableController`:
+
+```
+import {
+  startOfDay,
+  endOfDay,
+  setHours,
+  setMinutes,
+  setSeconds,
+  format,
+  isAfter,
+} from 'date-fns';
+import { Op } from 'sequelize';
+import Appointments from '../models/Appointment';
+
+class AvailableController {
+  async index(req, res) {
+    const { date } = req.query;
+
+    if (!date) {
+      return res.status(400).json({ error: 'Invalid date' });
+    }
+
+    const searchDate = Number(date);
+
+    const appointments = await Appointments.findAll({
+      where: {
+        provider_id: req.params.providerId, // Passamos nas rotas
+        canceled_at: null,
+        date: {
+          [Op.between]: [startOfDay(searchDate), endOfDay(searchDate)],
+        },
+      },
+    });
+
+    const schedule = [
+      '08:00',
+      '09:00',
+      '10:00',
+      '11:00',
+      '12:00',
+      '13:00',
+      '14:00',
+      '15:00',
+      '16:00',
+      '17:00',
+      '18:00',
+      '19:00',
+      '20:00',
+    ];
+
+    const available = schedule.map(time => {
+      const [hour, minute] = time.split(':');
+      const value = setSeconds(
+        setMinutes(setHours(searchDate, hour), minute),
+        0
+      );
+      return {
+        time,
+        value: format(value, "yyyy-MM-dd'T'HH:mm:ssxxx"),
+        available:
+          isAfter(value, new Date()) &&
+          !appointments.find(a => format(a.date, 'HH:mm') === time),
+      };
+    });
+
+    return res.json(available);
+  }
+}
+
+export default new AvailableController();
+
+```
+Primeiro verificamos se a data existe, depois pegamos todos os appointments do prestador que passamos nos params, ex: prestador de id: 3  ***/providers/3/available***.
+
+Depois disso pegamos tambem somente os que nao estao cancelados e que data esta entre o inicio(00:00) e o fim do dia (23:59:59).
+
+Por ultimo criamos uma ***Array*** com todos os horarios, fazemos um `map()` nela pra separar todos os elementos da ***Array*** em uma variavel unica pra cada, depois separamos a hora e o minuto pelo metodo `split()` nos dois pontos e passamos uma const value em que o segundo é sempre 0 e passamos os minutos e segundos, depois retornamos os horarios cada um `time` , formatamos o `value` e depois verificamos se o horario ja passou da hora atual  `isAfter(value, new Date())` e se o horario ja nao foi agendado por outra pessoa `!appointments.find(a => format(a.date, 'HH:mm') === time)`.
+
+Depois vamos criar uma rota para ver esses horarios disponiveis:
+
+`routes.js`:
+
+```
+...
+import AvailableController from './app/controllers/AvailableController';
+...
+routes.get('/providers/:id/available', AvailableController.index);
+...
+```
+
