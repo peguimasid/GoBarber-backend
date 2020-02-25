@@ -1028,7 +1028,7 @@ import { startOfHour, parseISO, isBefore, format, ** subHours ** } from 'date-fn
 ```
 Primeiro verificamos se a pessoa que esta tentando cancelar foi a mesma que fez o agendamento, depois disso verificamos se a pessoa esta cancelando com duas horas de antecedencia, caso de tudo certo nos passamos o horario atual no `canceled_at` e o horario é cancelado.
 
-# Aula 32 - Configurando Nodemailer
+## Aula 32 - Configurando Nodemailer
 
 Toda vez que um agendamento for cancelado, o prestador de serviço recebera um email dizendo que foi cancelado.
 
