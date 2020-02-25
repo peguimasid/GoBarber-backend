@@ -1523,7 +1523,9 @@ class AvailableController {
 export default new AvailableController();
 
 ```
-Primeiro verificamos se a data existe, depois pegamos todos os appointments do prestador que passamos nos params, ex: prestador de id: 3  ***/providers/3/available***.
+Primeiro verificamos se a data existe, depois pegamos todos os appointments do prestador que passamos nos params.
+
+`ex: prestador de id: 3   /providers/3/available.`
 
 Depois disso pegamos tambem somente os que nao estao cancelados e que data esta entre o inicio(00:00) e o fim do dia (23:59:59).
 
