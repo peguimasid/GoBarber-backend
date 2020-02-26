@@ -1576,3 +1576,73 @@ Ali estamos primeiro passando um campo `Sequelize.VIRTUAL` que quer dizer que o 
 
 
 Para exibir isso vamos em `AppointmentController` e dentro do metodo `index` nos `attributes` passamos o `past` e o `cancelable` para eles poderem ser exibidos no ***Frontend***. 
+
+## Aula 38 - Tratamento de exceções
+
+É bom usarmos uma ferramenta que nos mostre os error da nossa aplicacao quando ela vai para producao, pode acontecer inumero erros como o banco de dados cair, os emails nao serem enviados, ai temos que usar algo para nos mostrar esses erros e para isso vamos usar o [Sentry](https://sentry.io/welcome/)
+
+1. Vamos em ***Projects***
+2. Depois ***Create Project***
+3. Escolhemos ***Express***
+4. Rodamos no terminal `yarn add @sentry/node@5.12.2` // Rodar o que ele te der
+5. Instalar `yarn add express-async-errors ` para lidar com erros no ***Async***
+6. Instalar `yarn add youch`.
+7. Dentro de `src > config` criamos um arquivo chamado `sentry.js`:
+
+```
+export default {
+  dsn: 'https://fbc76dae76ac4b63843a224ba8310a11@sentry.io/2989693', // USE O SEU DSN
+};
+```
+
+8. Dentro de `src > app.js` (tirar os * do inicio):
+
+```
+import express from 'express';
+import path from 'path';
+* import Youch from 'youch';
+* import * as Sentry from '@sentry/node';
+* import 'express-async-errors';
+import routes from './routes';
+* import sentryConfig from './config/sentry';
+
+import './database';
+
+class App {
+  constructor() {
+    this.app = express();
+
+*   Sentry.init(sentryConfig);
+
+    this.middlewares();
+    this.routes();
+*   this.exceptionHadler();
+  }
+
+  middlewares() {
+*   this.app.use(Sentry.Handlers.requestHandler());
+    this.app.use(express.json());
+    this.app.use(
+      '/files',
+      express.static(path.resolve(__dirname, '..', 'tmp', 'uploads'))
+    );
+  }
+
+  routes() {
+    this.app.use(routes);
+*   this.app.use(Sentry.Handlers.errorHandler());
+  }
+
+* exceptionHadler() {
+*   this.app.use(async (err, req, res, next) => {
+*     const errors = await new Youch(err, req).toJSON();
+*
+*     return res.status(500).json(errors);
+*   });
+  }
+}
+
+export default new App().app;
+```
+
+Agora se entrarmos no site do ***Sentry*** e tiver qualquer erro ele ira mostrar para nos.
