@@ -1571,7 +1571,7 @@ past: {
           },
         },
 ```
-Ali estamos primeiro passando um campo `Sequelize.VIRTUAL` que quer dizer que o campo nao existe na tabela, mas vai aparecer no JavaScript no Frontend ***(1)***, depois disso verificamos se a data do agendamento é anterior a data atual, ou seja, uma data passada ***(2)***, e depois verificamos se a o horario que o cliente esta tentando cancelar é duas horas antes do horario do agenamento, se for, ele nao ia conseguir cancelar ***(3)***
+Ali estamos primeiro passando um campo `Sequelize.VIRTUAL` que quer dizer que o campo nao existe na tabela, mas vai aparecer no JavaScript no Frontend ***(1)***, depois disso verificamos se a data do agendamento é anterior a data atual, ou seja, uma data passada ***(2)***, e depois verificamos se a o horario que o cliente esta tentando cancelar é duas horas antes do horario do agenamento, se nao for, ele nao ia conseguir cancelar ***(3)***
 
 
 Para exibir isso vamos em `AppointmentController` e dentro do metodo `index` nos `attributes` passamos o `past` para ele poder ser exibido no ***Frontend***. Nao precisamos passar o `cancelable` pois nao é interessante ter ele. 
