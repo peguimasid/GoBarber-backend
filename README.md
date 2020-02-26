@@ -1646,3 +1646,70 @@ export default new App().app;
 ```
 
 Agora se entrarmos no site do ***Sentry*** e tiver qualquer erro ele ira mostrar para nos.
+
+## Aula 39 - Variaveis ambiente
+
+Sao variaveis que podemo ter seu valor alterado de acordo com o ambiente que nossa aplicacao esta rodando como por exemplo na sua maquina e na do eu colega.
+
+1. Para isso vamos comecar criando na raiz do projeto um arquivo com o nome `.env`, somente isso.
+Obs: ele deve ser adicionado ao `.gitignore`
+
+Depois vamos nas extensoes e instalamos uma extensao chamada ***DotENV*** para podermos mudar o tipo de texto
+
+`.env`:
+
+```
+APP_URL=http://localhost:3333
+NODE_ENV=developement
+
+# Auth
+
+APP_SECRET=bootcampgobarbernode
+
+# Database 
+
+DB_HOST=localhost
+DB_USER=postgres
+DB_PASS=docker
+DB_NAME=gobarber
+
+# Mongo
+
+MONGO_URL=mongodb://localhost:27017/gobarber
+
+#Redis
+
+REDIS_HOST=127.0.0.1
+REDIS_POST=6379
+
+# Mail
+
+MAIL_HOST=smtp.mailtrap.io
+MAIL_PORT=2525
+MAIL_USER=e5a194ac1ed80d
+MAIL_PASS=a9b90f6992efee
+```
+
+2. Depois disso salvamos e rodamos `yarn add dotenv`
+
+3. Agora no `app.js` e no `queue.js` nos colocamos a seguinte ***String*** la no topo:
+
+`import 'dotenv/config';`
+
+e dentro de `src > config  database.js`:
+
+`require('dotenv/config');`
+
+Agora podemos comecar a usar essas variaveis, para entender como funciona vamos pegar uma conexao feita no arquivo `File.js` que estava assim:
+
+`http://localhost:3000/files/${this.path}`
+
+Com as ***Enviroments Variables*** podemos substituir para isso:
+
+`${process.env.APP_URL}/files/${this.path}`
+
+o `process.env` acessa nosso arquivo `.env` e de la escolhemos o que queremos.
+
+E devemos fazer isso com todas as conexoes, senhas e etc, pois como adicionamos o `.env` no `.gitignore` os dados nao serao passados para o github e a pessoa que baixar para programar sabera que tera que substituir aqueles dados e nao ira usar os seus.
+
+## FIM
