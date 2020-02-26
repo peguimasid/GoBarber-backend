@@ -16,7 +16,7 @@ class Appointment extends Model {
         cancelable: {
           type: Sequelize.VIRTUAL,
           get() {
-            isBefore(new Date(), subHours(this.date, 2)); // verificando se a data atual é duas horas antes do horario agendado
+            return isBefore(new Date(), subHours(this.date, 2)); // verificando se a data atual é duas horas antes do horario agendado
           },
         },
       },
