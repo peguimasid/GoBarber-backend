@@ -5,7 +5,9 @@
   "scripts": {
     "nodemon": "nodemon src/server.js",
     "dev:debug": "nodemon --inspect src/server.js",
-    "queue": "nodemon src/queue.js"
+    "queue": "nodemon src/queue.js",
+    "build": "sucrase ./src -d ./dist --transforms imports",
+    "start": "node dist/server.js"
   },
   "license": "MIT",
   "dependencies": {
