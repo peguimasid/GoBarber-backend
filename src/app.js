@@ -29,7 +29,11 @@ class App {
   middlewares() {
     this.app.use(Sentry.Handlers.requestHandler());
     this.app.use(helmet());
-    this.app.use(cors());
+    this.app.use(
+      cors({
+        origin: process.env.FRONT_URL,
+      })
+    );
     this.app.use(express.json());
 
     this.app.use(
